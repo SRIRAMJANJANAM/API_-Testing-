@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Tester</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #7209b7;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --success: #06d6a0;
+            --warning: #ffd166;
+            --danger: #ef476f;
+            --gray: #adb5bd;
+            --border-radius: 12px;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+
+        .dark-theme {
+            --primary: #5e72e4;
+            --primary-dark: #4d5fd0;
+            --secondary: #8b5cf6;
+            --light: #121826;
+            --dark: #f8f9fa;
+            --gray: #6c757d;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: var(--transition);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h1 {
+            font-weight: 800;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: inline-block;
+        }
+
+        .theme-toggle {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle:hover {
+            background: var(--primary-dark);
+            transform: rotate(30deg);
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .dark-theme .card {
+            background: #1e293b;
+        }
+
+        .card-header {
+            padding: 20px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-body {
+            padding: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dark-theme label {
+            color: var(--light);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            background: white;
+            color: var(--dark);
+        }
+
+        .dark-theme input, 
+        .dark-theme select, 
+        .dark-theme textarea {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            font-family: monospace;
+        }
+
+        button {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
+        }
+
+        .response-section {
+            margin-top: 30px;
+        }
+
+        .status-code {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            background: var(--success);
+            color: white;
+        }
+
+        .status-error {
+            background: var(--danger);
+        }
+
+        pre {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            margin: 15px 0;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dark-theme pre {
+            background: #0f172a;
+        }
+
+        .response-tabs {
+            display: flex;
+            border-bottom: 2px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+
+        .dark-theme .response-tabs {
+            border-bottom-color: #4a5568;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray);
+            border-bottom: 3px solid transparent;
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: var(--gray);
+            font-size: 14px;
+        }
+
+        .dark-theme .footer {
+            border-top-color: #4a5568;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .card-body {
+                padding: 15px;
+            }
+            
+            input, select, textarea {
+                padding: 12px;
+            }
+        }
+
+        .json-key {
+            color: #ff6b6b;
+        }
+        
+        .json-string {
+            color: #51cf66;
+        }
+        
+        .json-number {
+            color: #339af0;
+        }
+        
+        .json-boolean {
+            color: #f76707;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-bolt"></i> SRIRAM API Tester</h1>
+            <button class="theme-toggle" id="themeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-paper-plane"></i>
+                <h2>Send Request</h2>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit">
+                        <i class="fas fa-paper-plane"></i>
+                        Send Request
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {% if response %}
+        <div class="card response-section">
+            <div class="card-header">
+                <i class="fas fa-reply"></i>
+                <h2>Response</h2>
+            </div>
+            <div class="card-body">
+                {% if response.error %}
+                    <div class="status-code status-error">Error</div>
+                    <p style="color: var(--danger); font-weight: 600;">
+                        <i class="fas fa-exclamation-circle"></i>
+                        {{ response.error }}
+                    </p>
+                {% else %}
+                    <div class="status-code">Status: {{ response.status_code }}</div>
+                    
+                    <div class="response-tabs">
+                        <div class="tab active" data-tab="body">Body</div>
+                        <div class="tab" data-tab="headers">Headers</div>
+                    </div>
+                    
+                    <div class="tab-content active" id="body-tab">
+                        <pre id="response-body">{{ response.body }}</pre>
+                    </div>
+                    
+                    <div class="tab-content" id="headers-tab">
+                        <pre>{{ response.headers|safe }}</pre>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <p>SRIRAM API Tester &copy; 2025 | Developed by SRIRAM <i class="fas fa-heart" style="color: var(--danger);"></i></p>
+        </div>
+    </div>
+
+    <script>
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-theme');
+            const icon = themeToggle.querySelector('i');
+            
+            if (body.classList.contains('dark-theme')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+
+        // Tab functionality
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Hide all tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // Show the selected tab content
+                const tabName = tab.getAttribute('data-tab');
+                document.getElementById(`${tabName}-tab`).classList.add('active');
+            });
+        });
+
+        // Syntax highlighting for JSON responses
+        function syntaxHighlight(json) {
+            if (typeof json !== 'string') {
+                json = JSON.stringify(json, undefined, 2);
+            }
+            
+            json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            
+            return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
+            function (match) {
+                let cls = 'json-number';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    } else {
+                        cls = 'json-string';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'json-boolean';
+                } else if (/null/.test(match)) {
+                    cls = 'json-null';
+                }
+                return '<span class="' + cls + '">' + match + '</span>';
+            });
+        }
+
+        // Try to format and highlight JSON if the response is JSON
+        const responseBody = document.getElementById('response-body');
+        if (responseBody) {
+            try {
+                const jsonData = JSON.parse(responseBody.textContent);
+                responseBody.innerHTML = syntaxHighlight(jsonData);
+            } catch (e) {
+                // Not JSON, leave as plain text
+            }
+        }
+    </script>
+</body>
+</html>
