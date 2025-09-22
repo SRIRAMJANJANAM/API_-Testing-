@@ -82,6 +82,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1.2rem;
+            transition: all 0.3s ease;
         }
 
         .theme-toggle:hover {
@@ -114,18 +115,11 @@
             padding: 25px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
         label {
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
             color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
         .dark-theme label {
@@ -162,7 +156,7 @@
             font-family: monospace;
         }
 
-        button {
+        button[type="submit"] {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border: none;
@@ -178,7 +172,7 @@
             transition: all 0.3s ease;
         }
 
-        button:hover {
+        button[type="submit"]:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px rgba(67, 97, 238, 0.3);
         }
@@ -281,20 +275,72 @@
             }
         }
 
-        .json-key {
-            color: #ff6b6b;
+        .json-key { color: #ff6b6b; }
+        .json-string { color: #51cf66; }
+        .json-number { color: #339af0; }
+        .json-boolean { color: #f76707; }
+
+        /* Floating chat button */
+        .floating-chat-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 1001;
+            transition: all 0.3s ease;
         }
-        
-        .json-string {
-            color: #51cf66;
+
+        .floating-chat-btn:hover {
+            transform: scale(1.1);
+            background: var(--primary-dark);
         }
-        
-        .json-number {
-            color: #339af0;
+
+        /* Chat modal */
+        .chat-modal {
+            display: none;
+            position: fixed;
+            bottom: 90px;
+            right: 20px;
+            width: 350px;
+            height: 500px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            overflow: hidden;
+            z-index: 1000;
+            flex-direction: column;
         }
-        
-        .json-boolean {
-            color: #f76707;
+
+        .chat-header {
+            background: var(--primary);
+            color: white;
+            padding: 10px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header .close-btn {
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .chat-content iframe {
+            width: 100%;
+            border: none;
+            height: 450px;
         }
     </style>
 </head>
@@ -362,6 +408,22 @@
         </div>
     </div>
 
+    <!-- Floating chat button -->
+    <button class="floating-chat-btn" id="floatingChatBtn" title="Open Chat">
+        <i class="fas fa-comment-dots"></i>
+    </button>
+
+    <!-- Chat modal -->
+    <div id="chatModal" class="chat-modal">
+        <div class="chat-header">
+            Chat
+            <span class="close-btn" id="closeChat">&times;</span>
+        </div>
+        <div class="chat-content">
+            <iframe id="chatFrame" src=""></iframe>
+        </div>
+    </div>
+
     <script>
         // Theme toggle functionality
         const themeToggle = document.getElementById('themeToggle');
@@ -384,18 +446,9 @@
         const tabs = document.querySelectorAll('.tab');
         tabs.forEach(tab => {
             tab.addEventListener('click', () => {
-                // Remove active class from all tabs
                 tabs.forEach(t => t.classList.remove('active'));
-                
-                // Add active class to clicked tab
                 tab.classList.add('active');
-                
-                // Hide all tab content
-                document.querySelectorAll('.tab-content').forEach(content => {
-                    content.classList.remove('active');
-                });
-                
-                // Show the selected tab content
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
                 const tabName = tab.getAttribute('data-tab');
                 document.getElementById(`${tabName}-tab`).classList.add('active');
             });
@@ -403,40 +456,42 @@
 
         // Syntax highlighting for JSON responses
         function syntaxHighlight(json) {
-            if (typeof json !== 'string') {
-                json = JSON.stringify(json, undefined, 2);
-            }
-            
+            if (typeof json !== 'string') json = JSON.stringify(json, undefined, 2);
             json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            
             return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, 
             function (match) {
                 let cls = 'json-number';
                 if (/^"/.test(match)) {
-                    if (/:$/.test(match)) {
-                        cls = 'json-key';
-                    } else {
-                        cls = 'json-string';
-                    }
-                } else if (/true|false/.test(match)) {
-                    cls = 'json-boolean';
-                } else if (/null/.test(match)) {
-                    cls = 'json-null';
-                }
+                    cls = /:$/.test(match) ? 'json-key' : 'json-string';
+                } else if (/true|false/.test(match)) cls = 'json-boolean';
+                else if (/null/.test(match)) cls = 'json-null';
                 return '<span class="' + cls + '">' + match + '</span>';
             });
         }
 
-        // Try to format and highlight JSON if the response is JSON
         const responseBody = document.getElementById('response-body');
         if (responseBody) {
             try {
                 const jsonData = JSON.parse(responseBody.textContent);
                 responseBody.innerHTML = syntaxHighlight(jsonData);
-            } catch (e) {
-                // Not JSON, leave as plain text
-            }
+            } catch (e) {}
         }
+
+        // Floating chat button functionality
+        const floatingChatBtn = document.getElementById('floatingChatBtn');
+        const chatModal = document.getElementById('chatModal');
+        const chatFrame = document.getElementById('chatFrame');
+        const closeChat = document.getElementById('closeChat');
+
+        floatingChatBtn.addEventListener('click', () => {
+            chatFrame.src = "http://localhost:5173/chat/11";
+            chatModal.style.display = "flex";
+        });
+
+        closeChat.addEventListener('click', () => {
+            chatFrame.src = "";
+            chatModal.style.display = "none";
+        });
     </script>
 </body>
 </html>
